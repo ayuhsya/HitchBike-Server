@@ -96,7 +96,7 @@ core.post('/toggleavailability', function(req, res, next){
   connection.on('connect', function(err) {
     // If no error, then good to proceed.
     console.log("Connected", err);
-    let request = new Request("UPDATE USERS SET availability = @availability WHERE id = @id OUTPUT UPDATED.*", function(err, rowCount){
+    let request = new Request("UPDATE USERS SET availability = @availability WHERE id = @id", function(err, rowCount){
       if (err){
         console.log(err);
       } else {
