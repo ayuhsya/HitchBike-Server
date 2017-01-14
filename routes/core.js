@@ -45,7 +45,7 @@ core.post('/putusers', function(req, res, next){
         console.log(err);
       }
     });
-    request.addParameter('id', TYPES.VarChar, req.body.id);
+    request.addParameter('1', TYPES.VarChar, req.body.id);
     request.on('row', function(col){
       console.log("Fetched", col);
       ret = [{"credits": col[0],
