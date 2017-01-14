@@ -28,7 +28,9 @@ core.post('/putusers', function(req, res, next){
       // If no error, then good to proceed.
       console.log("Connected");
       let request = new Request("SELECT credits, availability FROM USERS WHERE id=@id", function(err){
-        if (err){}
+        if (err){
+          console.log(err);
+        }
       });
       request.addParameter('id', TYPES.VarChar, req.body.id);
       request.on('row', function(col){
