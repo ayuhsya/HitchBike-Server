@@ -104,7 +104,7 @@ core.post('/toggleavailability', function(req, res, next){
       if (err){
         console.log(err);
       } else {
-        console.log("Toggled availability!");
+        console.log("Toggled availability!", availability);
         if (availability == 1){
           var newrequest = new Request("INSERT OR IGNORE INTO geolocation VALUES(@id,@latitude,@longitude)", function(err, rowCount){
             console.log("Insert to geolocation err", err);
