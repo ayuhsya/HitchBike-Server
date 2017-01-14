@@ -67,28 +67,22 @@ core.post('/putusers', function(req, res, next){
 
 core.post('/settoken', function(req, res, next){
   console.log("Setting token for ", req.body);
-  db.serialize(function(){
-    var stmt = db.prepare('UPDATE USERS SET token = ? WHERE id = ?');
-    stmt.run(req.body.token, req.body.id, function(err){
-      if(err != null){
-        console.log("Token added for ", req.body.id);
-        stmt.finalize();
+  var connection = new Connection(config.sqlserver);
+  connection.on('connect', function(err) {
+    // If no error, then good to proceed.
+    console.log("Connected", err);
+    let request = new Request("UPDATE USERS SET token = @token WHERE id = @id", function(err, rowCount){
+      if (err){
+        console.log(err);
+      } else {
+        console.log("Update token for ", req.body.id);
         res.status(200).json({"Status": "Success"});
       };
     });
-  });
-})
 
-core.get('/getusers', function(req, res, next){
-  console.log("Sending all users to client.");
-  ret = [];
-  db.serialize(function(){
-    db.each("SELECT name, availability FROM USERS", function(err, row){
-      ret.push(row);
-    }, function(err, rows){
-      console.log("Fetched "+ rows +  " rows");
-      res.status(200).send(JSON.stringify(ret));
-    });
+    request.addParameter('id',TYPES.VarChar,req.body.id);
+    request.addParameter('token',TYPES.VarChar,req.body.token);
+    connection.execSql(request);
   });
 });
 
@@ -145,14 +139,25 @@ core.post('/toggleavailability', function(req, res, next){
 
 core.post('/updateposition', function(req, res, next){
   console.log("Updating position for ", req.body);
-  var params = [req.body.latitude, req.body.longitude, req.body.id];
-  db.serialize(function(){
-    db.run("UPDATE geolocation SET latitude = ?, longitude = ? WHERE id = ?", params, function(err){
-      if (err != "null"){
-        res.status(200).json({"Status":"Success"});
-      }
-    })
-  })
+
+  var connection = new Connection(config.sqlserver);
+  connection.on('connect', function(err) {
+    // If no error, then good to proceed.
+    console.log("Connected", err);
+    let request = new Request("UPDATE geolocation SET latitude = @latitude, longitude = @longitude WHERE id = @id", function(err, rowCount){
+      if (err){
+        console.log(err);
+      } else {
+        console.log("Update position for ", req.body.id);
+        res.status(200).json({"Status": "Success"});
+      };
+    });
+
+    request.addParameter('id',TYPES.VarChar,req.body.id);
+    request.addParameter('latitude',TYPES.VarChar,req.body.latitude);
+    request.addParameter('longitude',TYPES.VarChar,req.body.longitude);
+    connection.execSql(request);
+  });
 });
 
 /*
