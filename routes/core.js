@@ -33,7 +33,8 @@ core.post('/putusers', function(req, res, next){
         } else {
           console.log("Done!");
           if (rowCount == 0){
-            var newrequest = new Request("INSERT into USERS VALUE(@username,@id,@email,@phone,@token,@availability,@credits)", function(err, rowCount){
+            var newrequest = new Request("INSERT into USERS VALUES(@username,@id,@email,@phone,@token,@availability,@credits)", function(err, rowCount){
+              console.log("Inner Error", err);
               if(rowCount != 1){
                 res.status(400).json({"Fail":"400"});
               } else {
