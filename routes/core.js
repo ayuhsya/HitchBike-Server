@@ -17,7 +17,7 @@ var config = {
         server: 'hitchbike.database.windows.net',
         // When you connect to Azure SQL Database, you need these next options.
         options: {encrypt: true, database: 'hitchbikedb'}
-    }; 
+    };
 
 core.post('/putusers', function(req, res, next){
   console.log("New user request called with ", req.body);
@@ -27,7 +27,7 @@ core.post('/putusers', function(req, res, next){
     connection.on('connect', function(err) {
       // If no error, then good to proceed.
       console.log("Connected");
-      let request = new Request("SELECT credits, availability FROM user WHERE id=@id", function(err){
+      let request = new Request("SELECT credits, availability FROM USERS WHERE id=@id", function(err){
         if (err){}
       });
       request.addParameter('id', TYPES.VarChar, req.body.id);
@@ -37,7 +37,7 @@ core.post('/putusers', function(req, res, next){
       });
       request.on('done', function(rowCount, more){
         if (rowCount == 0){
-          let newrequest = new Request("INSERT into user VALUE(@username,@id,@email,@phone,@token,0,10)");
+          let newrequest = new Request("INSERT into USERS VALUE(@username,@id,@email,@phone,@token,0,10)");
           newrequest.addParameter('username',TYPES.VarChar,req.body.username);
           newrequest.addParameter('id',TYPES.VarChar,req.body.id);
           newrequest.addParameter('email',TYPES.VarChar,req.body.email);
@@ -65,7 +65,7 @@ core.post('/putusers', function(req, res, next){
 core.post('/settoken', function(req, res, next){
   console.log("Setting token for ", req.body);
     db.serialize(function(){
-      var stmt = db.prepare('UPDATE user SET token = ? WHERE id = ?');
+      var stmt = db.prepare('UPDATE USERS SET token = ? WHERE id = ?');
       stmt.run(req.body.token, req.body.id, function(err){
         if(err != null){
           console.log("Token added for ", req.body.id);
@@ -80,7 +80,7 @@ core.get('/getusers', function(req, res, next){
   console.log("Sending all users to client.");
   ret = [];
   db.serialize(function(){
-    db.each("SELECT name, availability FROM user", function(err, row){
+    db.each("SELECT name, availability FROM USERS", function(err, row){
       ret.push(row);
     }, function(err, rows){
       console.log("Fetched "+ rows +  " rows");
@@ -93,7 +93,7 @@ core.post('/toggleavailability', function(req, res, next){
   console.log("Updating availability for",req.body.id);
   db.serialize(function(){
     var availability = (req.body.availability == "true")? 1:0;
-    db.run("UPDATE user SET availability = ? WHERE id = ?",availability, req.body.id, function(err){
+    db.run("UPDATE USERS SET availability = ? WHERE id = ?",availability, req.body.id, function(err){
       if (err != "null"){
         if (availability == 1){
           stmt = db.prepare("INSERT OR IGNORE INTO geolocation VALUES(?,null,null)");
