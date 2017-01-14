@@ -1,10 +1,9 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
-var config = require('config')['production'];
 app.use(bodyParser.json())
 
-app.listen(config.port);
+app.listen(process.env.PORT || 3000);
 
 var core = require('./routes/core');
 app.use('/',core);
