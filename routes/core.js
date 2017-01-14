@@ -33,6 +33,7 @@ core.post('/putusers', function(req, res, next){
         }
       });
       request.addParameter('id', TYPES.VarChar, req.body.id);
+      console.log(request);
       request.on('row', function(col){
         console.log("Fetched", col);
         ret = [{"credits": col[0],
@@ -62,6 +63,7 @@ core.post('/putusers', function(req, res, next){
         }
       });
 
+      console.log("Second", request);     
       connection.execSql(request);
     });
 });
