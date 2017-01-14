@@ -63,7 +63,7 @@ core.post('/putusers', function(req, res, next){
                 console.log('NULL');
               } else {
                 console.log("Value ",column);
-                ret[column.colName] = column.value;
+                ret[column.metadata.colName] = column.value;
               };
             });
       });
