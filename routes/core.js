@@ -1,40 +1,65 @@
 var express = require('express');
 var geolib = require('geolib');
 var events = require('events');
-var sqlite3 = require('sqlite3').verbose();
+var Connection = require('tedious').Connection;
 var FCM = require('fcm-push');
+var Request = require('tedious').Request
+var TYPES = require('tedious').TYPES;
 //var sql = require('sql');
 //var helpers = require('helpers');
 //var promise = require('bluebird');
 var core = express.Router();
 var serverKey = 'AAAAKkwMFhM:APA91bGB9UA6C3V7C7hSfYox4Kwuu-FqwLrXk3ehyF8WKz7aEQxXutLXSBCVWlnMhRVjDJIb7XW-MTX8xGYV7xahRpOEKCDD6xVAhmoiKL2frwgdqlus2928raq1vjQaVZZWbf8UlJbu';
 //var sendRequest = promise.promisify(helpers.acceptListener);
-
-
-var db = new sqlite3.Database('./hitchbikedb');
+var config = {
+        userName: 'hitchbikeadmin',
+        password: 'whiledOnes@1',
+        server: 'hitchbike.database.windows.net',
+        // When you connect to Azure SQL Database, you need these next options.
+        options: {encrypt: true, database: 'hitchbikedb'}
+    }; 
 
 core.post('/putusers', function(req, res, next){
   console.log("New user request called with ", req.body);
-  ret = [];
-  db.serialize(function(){
-    var stmt = db.prepare('SELECT credits, availability FROM user WHERE id=?', req.body.id);
-    stmt.get(function(err, row){
-      if (row != undefined){
-        console.log("User already exists with this ID.");
-        res.send(JSON.stringify(row));
-      } else {
-        stmt = db.prepare("INSERT INTO user VALUES(?,?,?,?,?,?,?)");
-        stmt.run(req.body.username,req.body.id,req.body.email,req.body.phone,req.body.token,"0","10");
-        stmt.finalize();
+  let ret = [];
 
-        stmt = db.prepare('SELECT credits, availability FROM user WHERE id=?', req.body.id);
-        stmt.get(function(err, row){
-          console.log("New user created!");
-          res.status(200).send(JSON.stringify(row));
-        })
-      }
+  var connection = new Connection(config);
+    connection.on('connect', function(err) {
+      // If no error, then good to proceed.
+      console.log("Connected");
+      let request = new Request("SELECT credits, availability FROM user WHERE id=@id", function(err){
+        if (err){}
+      });
+      request.addParameter('id', TYPES.VarChar, req.body.id);
+      request.on('row', function(col){
+        ret = [{"credits": col[0],
+          "availability": col[1]}];
+      });
+      request.on('done', function(rowCount, more){
+        if (rowCount == 0){
+          let newrequest = new Request("INSERT into user VALUE(@username,@id,@email,@phone,@token,0,10)");
+          newrequest.addParameter('username',TYPES.VarChar,req.body.username);
+          newrequest.addParameter('id',TYPES.VarChar,req.body.id);
+          newrequest.addParameter('email',TYPES.VarChar,req.body.email);
+          newrequest.addParameter('phone',TYPES.VarChar,req.body.phone);
+          newrequest.addParameter('token',TYPES.VarChar,req.body.token);
+
+          newrequest.on('done', function(rowCount,more){
+            if(rowCount != 1){
+              res.status(400).json({"Fail":"400"});
+            } else {
+              res.status(200).json({"credits":'10',"availability":'0'});
+            }
+          });
+          connection.execSql(newrequest);
+        } else {
+          console.log("Fetched ", rowCount);
+          res.status(200).json(JSON.stringify(ret));
+        }
+      });
+
+      connection.execSql(request);
     });
-  });
 });
 
 core.post('/settoken', function(req, res, next){
