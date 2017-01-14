@@ -14,7 +14,7 @@ var serverKey = 'AAAAKkwMFhM:APA91bGB9UA6C3V7C7hSfYox4Kwuu-FqwLrXk3ehyF8WKz7aEQx
 var config = {
         userName: 'hitchbikeadmin',
         password: 'whiledOnes@1',
-        server: 'tcp://hitchbike.database.windows.net:1433',
+        server: 'http://hitchbike.database.windows.net:1433',
         // When you connect to Azure SQL Database, you need these next options.
         options: {encrypt: true, database: 'hitchbikedb'}
     };
