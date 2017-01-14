@@ -95,7 +95,7 @@ core.get('/getusers', function(req, res, next){
 core.post('/toggleavailability', function(req, res, next){
   console.log("Updating availability for",req.body);
 
-  var availability = (req.body.availability === 'true') ? 1 : 0;
+  var availability = 1; //(req.body.availability == 'true') ? 1 : 0;
   console.log("Set availability", availability);
   var connection = new Connection(config.sqlserver);
   connection.on('connect', function(err) {
