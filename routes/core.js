@@ -27,12 +27,12 @@ core.post('/putusers', function(req, res, next){
     connection.on('connect', function(err) {
       // If no error, then good to proceed.
       console.log("Connected", err);
-      let request = new Request("SELECT credits, availability FROM USERS WHERE id="+req.body.id, function(err){
+      let request = new Request("SELECT credits, availability FROM USERS WHERE id=@id", function(err){
         if (err){
           console.log(err);
         }
       });
-      // request.addParameter('id', TYPES.VarChar, req.body.id);
+      request.addParameter('id', TYPES.VarChar, req.body.id);
       console.log(request);
       request.on('row', function(col){
         console.log("Fetched", col);
