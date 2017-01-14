@@ -171,7 +171,7 @@ core.post('/updateposition', function(req, res, next){
 
 
 // TODO Implement using spatial data type in mssql-server
-core.push('/sendpickrequest', function(req, res, next){
+core.post('/sendpickrequest', function(req, res, next){
   console.log("Find nearest available pooler for ", req.body);
   var ret = [];
 
