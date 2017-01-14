@@ -2,7 +2,7 @@
   "name": "hitchbike",
   "version": "1.0.0",
   "description": "Backend for HitchBike android application.",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -17,8 +17,5 @@
     "node-gcm": "^0.14.4",
     "sql": "^0.73.0",
     "sqlite3": "^3.1.8"
-  },
-  "engines": {
-    "node": "6.9.4"
   }
 }
