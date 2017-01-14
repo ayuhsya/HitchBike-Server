@@ -102,8 +102,8 @@ core.post('/toggleavailability', function(req, res, next){
       } else {
         console.log("Toggled availability!", availability);
         if (availability == 1){
-          var newrequest = new Request("INSERT INTO geolocation (id, latitude, longitude, token) SELECT @id,@latitude,@longitude,@token WHERE NOT EXISTS (SELECT * FROM GEOLOCATION WHERE id=@id)", function(err, rowCount){
-            console.log("Insert to geolocation err", err);
+          var newrequest = new Request("INSERT INTO GEOLOCATION (id, latitude, longitude, token) SELECT @id,@latitude,@longitude,@token WHERE NOT EXISTS (SELECT * FROM GEOLOCATION WHERE id=@id)", function(err, rowCount){
+            console.log("Insert to GEOLOCATION err", err);
             if (err){
               res.status(400).json({"Fail":"400"});
             } else {
@@ -116,8 +116,8 @@ core.post('/toggleavailability', function(req, res, next){
           newrequest.addParameter('token',TYPES.VarChar, ret['token']);
           connection.execSql(newrequest);
         } else {
-          var newrequest2 = new Request("DELETE FROM geolocation WHERE id = @id", function(err, rowCount){
-            console.log("Delete from geolocation err", err);
+          var newrequest2 = new Request("DELETE FROM GEOLOCATION WHERE id = @id", function(err, rowCount){
+            console.log("Delete from GEOLOCATION err", err);
             if (err){
               res.status(400).json({"Fail":"400"});
             } else {
@@ -153,7 +153,7 @@ core.post('/updateposition', function(req, res, next){
   connection.on('connect', function(err) {
     // If no error, then good to proceed.
     console.log("Connected", err);
-    let request = new Request("UPDATE geolocation SET latitude = @latitude, longitude = @longitude WHERE id = @id", function(err, rowCount){
+    let request = new Request("UPDATE GEOLOCATION SET latitude = @latitude, longitude = @longitude WHERE id = @id", function(err, rowCount){
       if (err){
         console.log(err);
       } else {
@@ -179,7 +179,7 @@ core.push('/sendpickrequest', function(req, res, next){
   connection.on('connect', function(err) {
     // If no error, then good to proceed.
     console.log("Connected", err);
-    let request = new Request("SELECT * FROM geolocation", function(err, rowCount){
+    let request = new Request("SELECT * FROM GEOLOCATION", function(err, rowCount){
       if (err){
         console.log(err);
       } else {
