@@ -95,10 +95,10 @@ core.get('/getusers', function(req, res, next){
 core.post('/toggleavailability', function(req, res, next){
   console.log("Updating availability for",req.body);
 
-  var availability = 0;
+  let availability = 0;
 
   if (req.body.availability == "true") availability = 1;
-  
+
   console.log("Set availability", availability);
   var connection = new Connection(config.sqlserver);
   connection.on('connect', function(err) {
