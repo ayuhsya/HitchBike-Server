@@ -27,9 +27,33 @@ core.post('/putusers', function(req, res, next){
     connection.on('connect', function(err) {
       // If no error, then good to proceed.
       console.log("Connected", err);
-      let request = new Request("SELECT credits, availability FROM USERS WHERE id=@id", function(err){
+      let request = new Request("SELECT credits, availability FROM USERS WHERE id=@id", function(err, rowCount){
         if (err){
           console.log(err);
+        } else {
+          console.log("Done!");
+          if (rowCount == 0){
+            let newrequest = new Request("INSERT into USERS VALUE(@username,@id,@email,@phone,@token,@availability,@credits)");
+            newrequest.addParameter('username',TYPES.VarChar,req.body.username);
+            newrequest.addParameter('id',TYPES.VarChar,req.body.id);
+            newrequest.addParameter('email',TYPES.VarChar,req.body.email);
+            newrequest.addParameter('phone',TYPES.VarChar,req.body.phone);
+            newrequest.addParameter('token',TYPES.VarChar,req.body.token);
+            newrequest.addParameter('availability',TYPES.Int,0);
+            newrequest.addParameter('credits',TYPES.Int,10);
+
+            newrequest.on('done', function(rowCount,more){
+              if(rowCount != 1){
+                res.status(400).json({"Fail":"400"});
+              } else {
+                res.status(200).json({"credits":'10',"availability":'0'});
+              }
+            });
+            connection.execSql(newrequest);
+          } else {
+            console.log("Fetched ", rowCount);
+            res.status(200).json(JSON.stringify(ret));
+          }
         }
       });
       request.addParameter('id', TYPES.VarChar, req.body.id);
@@ -43,31 +67,6 @@ core.post('/putusers', function(req, res, next){
                 ret[column.colName] = column.value;
               };
             });
-      });
-      request.on('done', function(rowCount, more){
-        console.log("Done!");
-        if (rowCount == 0){
-          let newrequest = new Request("INSERT into USERS VALUE(@username,@id,@email,@phone,@token,@availability,@credits)");
-          newrequest.addParameter('username',TYPES.VarChar,req.body.username);
-          newrequest.addParameter('id',TYPES.VarChar,req.body.id);
-          newrequest.addParameter('email',TYPES.VarChar,req.body.email);
-          newrequest.addParameter('phone',TYPES.VarChar,req.body.phone);
-          newrequest.addParameter('token',TYPES.VarChar,req.body.token);
-          newrequest.addParameter('availability',TYPES.Int,0);
-          newrequest.addParameter('credits',TYPES.Int,10);
-
-          newrequest.on('done', function(rowCount,more){
-            if(rowCount != 1){
-              res.status(400).json({"Fail":"400"});
-            } else {
-              res.status(200).json({"credits":'10',"availability":'0'});
-            }
-          });
-          connection.execSql(newrequest);
-        } else {
-          console.log("Fetched ", rowCount);
-          res.status(200).json(JSON.stringify(ret));
-        }
       });
 
       console.log("Second", request);
