@@ -21,7 +21,7 @@ var config = {
 
 core.post('/putusers', function(req, res, next){
   console.log("New user request called with ", req.body);
-  var ret = {"credits":null, "availability":null};
+  var ret = {};
 
   var connection = new Connection(config);
     connection.on('connect', function(err) {
