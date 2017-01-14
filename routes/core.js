@@ -214,7 +214,7 @@ core.post('/sendpickrequest', function(req, res, next){
         connection.on('connect', function(err) {
           // If no error, then good to proceed.
           console.log("Connected", err);
-          let request = new Request("INSERT into REQUESTS VALUES(@id,@status,@timestamp)", function(err, rowCount){
+          let newrequest = new Request("INSERT into REQUESTS VALUES(@id,@status,@timestamp)", function(err, rowCount){
             if (err){
               console.log(err);
             } else {
@@ -223,10 +223,10 @@ core.post('/sendpickrequest', function(req, res, next){
             };
           });
 
-          request.addParameter('id',TYPES.VarChar,req.body.id);
-          request.addParameter('status',TYPES.VarChar,'False');
-          request.addParameter('timestamp', TYPES.VarChar, Date.now());
-          connection.execSql(request);
+          newrequest.addParameter('id',TYPES.VarChar,req.body.id);
+          newrequest.addParameter('status',TYPES.VarChar,'False');
+          newrequest.addParameter('timestamp', TYPES.VarChar, Date.now());
+          connection.execSql(newrequest);
         });
       };
     });
@@ -243,14 +243,11 @@ core.post('/sendpickrequest', function(req, res, next){
       });
       ret.push(obj);
     });
-
-    request.addParameter('id',TYPES.VarChar,req.body.id);
-    request.addParameter('token',TYPES.VarChar,req.body.token);
     connection.execSql(request);
   });
 });
 
-core.put('/acceptrequest', function(req, res, next){
+core.post('/acceptrequest', function(req, res, next){
   console.log("Accept request from ", req.body);
   var ret = {};
   var connection = new Connection(config.sqlserver);
