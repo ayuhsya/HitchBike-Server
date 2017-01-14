@@ -39,6 +39,7 @@ core.post('/putusers', function(req, res, next){
           "availability": col[1]}];
       });
       request.on('done', function(rowCount, more){
+        console.log("Done!");
         if (rowCount == 0){
           let newrequest = new Request("INSERT into USERS VALUE(@username,@id,@email,@phone,@token,0,10)");
           newrequest.addParameter('username',TYPES.VarChar,req.body.username);
