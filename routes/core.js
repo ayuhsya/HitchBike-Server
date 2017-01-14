@@ -36,8 +36,8 @@ core.post('/putusers', function(req, res, next){
       console.log(request);
       request.on('row', function(col){
         console.log("Fetched", col);
-        ret = [{"credits": col[0],
-          "availability": col[1]}];
+        ret = [{"credits": col[0].value,
+          "availability": col[1].value}];
       });
       request.on('done', function(rowCount, more){
         console.log("Done!");
