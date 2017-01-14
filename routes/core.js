@@ -34,10 +34,15 @@ core.post('/putusers', function(req, res, next){
       });
       request.addParameter('id', TYPES.VarChar, req.body.id);
       console.log(request);
-      request.on('row', function(col){
-        console.log("Fetched", col);
-        ret = [{"credits": col[0].value,
-          "availability": col[1].value}];
+      request.on('row', function(columns){
+        columns.forEach(function(column) {
+              if (column.value === null) {
+                console.log('NULL');
+              } else {
+                console.log("Value " + column.value);
+                ret[column.colName] = column.value;
+              };
+            });
       });
       request.on('done', function(rowCount, more){
         console.log("Done!");
