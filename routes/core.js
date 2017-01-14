@@ -10,7 +10,7 @@ var sql = require('sql');
 sql.setDialect('mssql');
 var userstbl = sql.define({
   name: 'USERS',
-  columns: ['username', 'id', 'email', 'phone', 'token', 'availability', 'credits'];
+  columns: ['username', 'id', 'email', 'phone', 'token', 'availability', 'credits']
 });
 
 //var helpers = require('helpers');
