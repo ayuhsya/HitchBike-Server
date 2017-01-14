@@ -1,0 +1,8 @@
+{
+  "sqlserver": {
+    "userName": "hitchbikeadmin",
+    "password": "whiledOnes@1",
+    "server": "hitchbike.database.windows.net",
+    "options": {"encrypt": true, "database": "hitchbikedb"}
+  }
+}
