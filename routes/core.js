@@ -51,7 +51,7 @@ core.post('/putusers', function(req, res, next){
             connection.execSql(newrequest);
           } else {
             console.log("Fetched ", rowCount);
-            res.status(200).json(JSON.stringify(ret));
+            res.status(200).json(ret);
           }
         }
       });
