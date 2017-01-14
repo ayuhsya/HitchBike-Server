@@ -86,7 +86,6 @@ core.post('/settoken', function(req, res, next){
 
 core.post('/toggleavailability', function(req, res, next){
   console.log("Updating availability for",req.body);
-  ret = {};
   let availability = 0;
 
   if (req.body.availability == "true") availability = 1;
@@ -113,7 +112,7 @@ core.post('/toggleavailability', function(req, res, next){
           newrequest.addParameter('id',TYPES.VarChar,req.body.id);
           newrequest.addParameter('latitude',TYPES.VarChar,null);
           newrequest.addParameter('longitude',TYPES.VarChar,null);
-          newrequest.addParameter('token',TYPES.VarChar, ret['token']);
+          newrequest.addParameter('token',TYPES.VarChar, req.body.token);
           connection.execSql(newrequest);
         } else {
           var newrequest2 = new Request("DELETE FROM GEOLOCATION WHERE id = @id", function(err, rowCount){
@@ -132,16 +131,6 @@ core.post('/toggleavailability', function(req, res, next){
 
     request.addParameter('id',TYPES.VarChar,req.body.id);
     request.addParameter('availability',TYPES.VarChar,availability);
-    request.on('row', function(columns){
-      columns.forEach(function(column) {
-        if (column.value === null) {
-          console.log('NULL');
-        } else {
-          console.log("Value ",column);
-          ret[column.metadata.colName] = column.value;
-        };
-      });
-    });
     connection.execSql(request);
   });
 });
