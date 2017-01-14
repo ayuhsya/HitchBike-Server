@@ -42,12 +42,14 @@ core.post('/putusers', function(req, res, next){
       request.on('done', function(rowCount, more){
         console.log("Done!");
         if (rowCount == 0){
-          let newrequest = new Request("INSERT into USERS VALUE(@username,@id,@email,@phone,@token,0,10)");
+          let newrequest = new Request("INSERT into USERS VALUE(@username,@id,@email,@phone,@token,@availability,@credits)");
           newrequest.addParameter('username',TYPES.VarChar,req.body.username);
           newrequest.addParameter('id',TYPES.VarChar,req.body.id);
           newrequest.addParameter('email',TYPES.VarChar,req.body.email);
           newrequest.addParameter('phone',TYPES.VarChar,req.body.phone);
           newrequest.addParameter('token',TYPES.VarChar,req.body.token);
+          newrequest.addParameter('availability',TYPES.Int,0);
+          newrequest.addParameter('credits',TYPES.Int,10);
 
           newrequest.on('done', function(rowCount,more){
             if(rowCount != 1){
