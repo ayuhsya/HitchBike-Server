@@ -41,7 +41,9 @@ core.post('/putusers', function(req, res, next){
       userstbl.id.equals(req.body.id)).toQuery();
 
     let request = new Request(query.text, function(err){
-      if (err){}
+      if (err){
+        console.log(err);
+      }
     });
     request.addParameter('id', TYPES.VarChar, req.body.id);
     request.on('row', function(col){
