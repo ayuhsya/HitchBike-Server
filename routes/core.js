@@ -21,7 +21,7 @@ var config = {
 
 core.post('/putusers', function(req, res, next){
   console.log("New user request called with ", req.body);
-  let ret = [];
+  var ret = [];
 
   var connection = new Connection(config);
     connection.on('connect', function(err) {
@@ -33,7 +33,7 @@ core.post('/putusers', function(req, res, next){
         } else {
           console.log("Done!");
           if (rowCount == 0){
-            let newrequest = new Request("INSERT into USERS VALUE(@username,@id,@email,@phone,@token,@availability,@credits)", function(err, rowCount){
+            var newrequest = new Request("INSERT into USERS VALUE(@username,@id,@email,@phone,@token,@availability,@credits)", function(err, rowCount){
               if(rowCount != 1){
                 res.status(400).json({"Fail":"400"});
               } else {
