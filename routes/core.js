@@ -104,7 +104,7 @@ core.post('/toggleavailability', function(req, res, next){
       } else {
         console.log("Toggled availability!", availability);
         if (availability == 1){
-          var newrequest = new Request("INSERT IF NOT EXISTS INTO geolocation VALUES(@id,@latitude,@longitude)", function(err, rowCount){
+          var newrequest = new Request("INSERT INTO geolocation (id, latitude, longitude) SELECT @id,@latitude,@longitude WHERE NOT EXISTS (SELECT * FROM GEOLOCATION WHERE id=@id)", function(err, rowCount){
             console.log("Insert to geolocation err", err);
             if (err){
               res.status(400).json({"Fail":"400"});
