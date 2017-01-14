@@ -104,7 +104,7 @@ core.post('/toggleavailability', function(req, res, next){
       } else {
         console.log("Toggled availability!", availability);
         if (availability == 1){
-          var newrequest = new Request("INSERT INTO geolocation VALUES(@id,@latitude,@longitude)", function(err, rowCount){
+          var newrequest = new Request("INSERT IF NOT EXISTS INTO geolocation VALUES(@id,@latitude,@longitude)", function(err, rowCount){
             console.log("Insert to geolocation err", err);
             if (err){
               res.status(400).json({"Fail":"400"});
@@ -163,28 +163,28 @@ core.post('/updateposition', function(req, res, next){
 /*
 // TODO Implement using spatial data type in mssql-server
 core.push('/sendpickrequest', function(req, res, next){
-console.log("Find nearest available benefactor for ", req.body);
-var fcm = new FCM(serverKey);
-
-var message = {
-to: 'ch8_JtJ7TmA:APA91bEH-KWYf1W9iDkyqvoUTegphgkNFtSXXZrQT1bfXMt5HwF8habQcxGQj5bDSROfN0WyCN9f-A5XbZ7lFDZGoi7XZ9Lbgi1cMmgFrIXE8XDzh-ZkWBsERyuouj8QdnB9us7Qw_-Q',
-data: {
-"freeloader": "world",
-"timestamp":
-},
-notification: {
-title: 'New request trip!',
-body: ''
-}
-};
-fcm.send(message, function(err, response){
-if (err) {
-console.log("Something has gone wrong!");
-} else {
-console.log("Successfully sent with response: ", response);
-}
-});
-
+  console.log("Find nearest available poolee for ", req.body);
+  /*
+  var fcm = new FCM(serverKey);
+  var message = {
+    to: 'ch8_JtJ7TmA:APA91bEH-KWYf1W9iDkyqvoUTegphgkNFtSXXZrQT1bfXMt5HwF8habQcxGQj5bDSROfN0WyCN9f-A5XbZ7lFDZGoi7XZ9Lbgi1cMmgFrIXE8XDzh-ZkWBsERyuouj8QdnB9us7Qw_-Q',
+    data: {
+      "freeloader": "world",
+      "timestamp":
+    },
+    notification: {
+      title: 'New request trip!',
+      body: 'You have a new request from a freeloader!'
+    }
+  };
+  fcm.send(message, function(err, response){
+    if (err) {
+      console.log("Something has gone wrong!");
+    } else {
+      console.log("Successfully sent with response: ", response);
+    }
+  });*/
+/*
 ret = [];
 db.serialize(function(){
 db.each("SELECT name, location FROM geolocation", function(err, row){
@@ -216,7 +216,6 @@ res.send(JSON.stringify(ret));
 });
 });
 */
-
 core.get('/home',function(req, res, next){
   res.send("¯\\_(ツ)_/¯");
 });
