@@ -6,12 +6,10 @@ var FCM = require('fcm-push');
 var Request = require('tedious').Request
 var TYPES = require('tedious').TYPES;
 var config = require('../config.json');
-
-//var helpers = require('helpers');
-//var promise = require('bluebird');
+var Promise = require('bluebird');
 var core = express.Router();
+var fcm = new FCM(config.fcmServerKey);
 
-//var sendRequest = promise.promisify(helpers.acceptListener);
 
 core.post('/putusers', function(req, res, next){
   console.log("New user request called with ", req.body);
@@ -88,7 +86,7 @@ core.post('/settoken', function(req, res, next){
 
 core.post('/toggleavailability', function(req, res, next){
   console.log("Updating availability for",req.body);
-
+  ret = {};
   let availability = 0;
 
   if (req.body.availability == "true") availability = 1;
@@ -98,13 +96,13 @@ core.post('/toggleavailability', function(req, res, next){
   connection.on('connect', function(err) {
     // If no error, then good to proceed.
     console.log("Connected", err);
-    let request = new Request("UPDATE USERS SET availability = @availability WHERE id = @id", function(err, rowCount){
+    let request = new Request("UPDATE USERS SET availability = @availability WHERE id = @id OUTPUT UPDATED.*", function(err, rowCount){
       if (err){
         console.log(err);
       } else {
         console.log("Toggled availability!", availability);
         if (availability == 1){
-          var newrequest = new Request("INSERT INTO geolocation (id, latitude, longitude) SELECT @id,@latitude,@longitude WHERE NOT EXISTS (SELECT * FROM GEOLOCATION WHERE id=@id)", function(err, rowCount){
+          var newrequest = new Request("INSERT INTO geolocation (id, latitude, longitude, token) SELECT @id,@latitude,@longitude,@token WHERE NOT EXISTS (SELECT * FROM GEOLOCATION WHERE id=@id)", function(err, rowCount){
             console.log("Insert to geolocation err", err);
             if (err){
               res.status(400).json({"Fail":"400"});
@@ -115,6 +113,7 @@ core.post('/toggleavailability', function(req, res, next){
           newrequest.addParameter('id',TYPES.VarChar,req.body.id);
           newrequest.addParameter('latitude',TYPES.VarChar,null);
           newrequest.addParameter('longitude',TYPES.VarChar,null);
+          newrequest.addParameter('token',TYPES.VarChar, ret['token']);
           connection.execSql(newrequest);
         } else {
           var newrequest2 = new Request("DELETE FROM geolocation WHERE id = @id", function(err, rowCount){
@@ -133,6 +132,16 @@ core.post('/toggleavailability', function(req, res, next){
 
     request.addParameter('id',TYPES.VarChar,req.body.id);
     request.addParameter('availability',TYPES.VarChar,availability);
+    request.on('row', function(columns){
+      columns.forEach(function(column) {
+        if (column.value === null) {
+          console.log('NULL');
+        } else {
+          console.log("Value ",column);
+          ret[column.metadata.colName] = column.value;
+        };
+      });
+    });
     connection.execSql(request);
   });
 });
@@ -160,62 +169,149 @@ core.post('/updateposition', function(req, res, next){
   });
 });
 
-/*
+
 // TODO Implement using spatial data type in mssql-server
 core.push('/sendpickrequest', function(req, res, next){
-  console.log("Find nearest available poolee for ", req.body);
-  /*
-  var fcm = new FCM(serverKey);
-  var message = {
-    to: 'ch8_JtJ7TmA:APA91bEH-KWYf1W9iDkyqvoUTegphgkNFtSXXZrQT1bfXMt5HwF8habQcxGQj5bDSROfN0WyCN9f-A5XbZ7lFDZGoi7XZ9Lbgi1cMmgFrIXE8XDzh-ZkWBsERyuouj8QdnB9us7Qw_-Q',
-    data: {
-      "freeloader": "world",
-      "timestamp":
-    },
-    notification: {
-      title: 'New request trip!',
-      body: 'You have a new request from a freeloader!'
-    }
-  };
-  fcm.send(message, function(err, response){
-    if (err) {
-      console.log("Something has gone wrong!");
-    } else {
-      console.log("Successfully sent with response: ", response);
-    }
-  });*/
-/*
-ret = [];
-db.serialize(function(){
-db.each("SELECT name, location FROM geolocation", function(err, row){
-ret.push(row);
-},
-function(err, rows){
-console.log("Fetched "+ rows +  " rows");
-var freeloaderpos = {
-'latitude': req.body.latitude,
-'longitude': req.body.longitude
-};
+  console.log("Find nearest available pooler for ", req.body);
+  var ret = [];
 
-for (let key in ret){
-let benefactorpos = {
-'latitude': ret[key].latitude,
-'longitude': ret[key].longitude
-}
-ret[key].geoDistance = geolib.getDistance(freeloaderpos, benefactorpos);
-};
+  var connection = new Connection(config.sqlserver);
+  connection.on('connect', function(err) {
+    // If no error, then good to proceed.
+    console.log("Connected", err);
+    let request = new Request("SELECT * FROM geolocation", function(err, rowCount){
+      if (err){
+        console.log(err);
+      } else {
+        console.log("Found " + rowCount + " available users.");
 
-ret.sort(helpers.compareFunction);
+        var freeloaderpos = {
+          'latitude': req.body.latitude,
+          'longitude': req.body.longitude
+        };
 
+        for (let key in ret){
+          let poolerpos = {
+            'latitude': ret[key].latitude,
+            'longitude': ret[key].longitude
+          }
+          ret[key].geoDistance = geolib.getDistance(freeloaderpos, poolerpos);
+        };
 
+        ret.sort(helpers.compareFunction);
 
-res.send(JSON.stringify(ret));
+        // sorted list of users in ret, send push notification here
+        for (let key in ret){
+          var message = {
+            to: ret[key].token,
+            data: {
+              "freeloader": req.body.id
+            },
+            notification: {
+              title: 'New request trip!',
+              body: 'You have a new request from a freeloader!'
+            }
+          };
+          fcm.send(message, function(err, response){
+            if (err) {
+              console.log("Something has gone wrong!");
+            } else {
+              console.log("Successfully sent with response: ", response);
+            }
+          });
+        };
 
+        var connection = new Connection(config.sqlserver);
+        connection.on('connect', function(err) {
+          // If no error, then good to proceed.
+          console.log("Connected", err);
+          let request = new Request("INSERT into REQUESTS VALUES(@id,@status,@timestamp)", function(err, rowCount){
+            if (err){
+              console.log(err);
+            } else {
+              console.log("Created new request entry for ", req.body.id);
+              res.status(200).json({"Status": "Success"});
+            };
+          });
 
+          request.addParameter('id',TYPES.VarChar,req.body.id);
+          request.addParameter('status',TYPES.VarChar,'False');
+          request.addParameter('timestamp', TYPES.VarChar, Date.now());
+          connection.execSql(request);
+        });
+      };
+    });
+
+    request.on('row', function(columns){
+      var obj = {};
+      columns.forEach(function(column) {
+        if (column.value === null) {
+          console.log('NULL');
+        } else {
+          console.log("Value ",column);
+          obj[column.metadata.colName] = column.value;
+        };
+      });
+      ret.push(obj);
+    });
+
+    request.addParameter('id',TYPES.VarChar,req.body.id);
+    request.addParameter('token',TYPES.VarChar,req.body.token);
+    connection.execSql(request);
+  });
 });
+
+core.put('/acceptrequest', function(req, res, next){
+  console.log("Accept request from ", req.body);
+  var ret = {};
+  var connection = new Connection(config.sqlserver);
+  connection.on('connect', function(err) {
+    // If no error, then good to proceed.
+    console.log("Connected", err);
+    let request = new Request("SELECT status from REQUESTS WHERE id=@id", function(err, rowCount){
+      if (err){
+        console.log(err);
+      } else {
+        if (ret['status'] == "True"){
+          console.log("Request already closed.");
+          res.status(400).json({"Status":"Request closed"});
+        } else {
+          var connection = new Connection(config.sqlserver);
+          connection.on('connect', function(err) {
+            // If no error, then good to proceed.
+            console.log("Connected", err);
+            let request = new Request("UPDATE REQUESTS SET status = @status WHERE id = @id", function(err, rowCount){
+              if (err){
+                console.log(err);
+              } else {
+                console.log("Request accepted by", req.body.id);
+                res.status(200).json({"Status": "Success"});
+              };
+            });
+            request.addParameter('id',TYPES.VarChar,req.body.freeloaderid);
+            request.addParameter('status', TYPES.VarChar, "True");
+            connection.execSql(request);
+          });
+        }
+      };
+    });
+
+    request.addParameter('id',TYPES.VarChar,req.body.id);
+    console.log(request);
+    request.on('row', function(columns){
+      columns.forEach(function(column) {
+        if (column.value === null) {
+          console.log('NULL');
+        } else {
+          console.log("Value ",column);
+          ret[column.metadata.colName] = column.value;
+        };
+      });
+    });
+    connection.execSql(request);
+  });
 });
-});
-*/
+
 core.get('/home',function(req, res, next){
   res.send("¯\\_(ツ)_/¯");
 });

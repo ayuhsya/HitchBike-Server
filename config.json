@@ -4,5 +4,6 @@
     "password": "whiledOnes@1",
     "server": "hitchbike.database.windows.net",
     "options": {"encrypt": true, "database": "hitchbikedb"}
-  }
+  },
+  "fcmServerKey": "AAAAKkwMFhM:APA91bGB9UA6C3V7C7hSfYox4Kwuu-FqwLrXk3ehyF8WKz7aEQxXutLXSBCVWlnMhRVjDJIb7XW-MTX8xGYV7xahRpOEKCDD6xVAhmoiKL2frwgdqlus2928raq1vjQaVZZWbf8UlJbu"
 }
