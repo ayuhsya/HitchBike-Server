@@ -96,6 +96,7 @@ core.post('/updateposition', function(req, res, next){
   })
 });
 
+/*
 // TODO Implement using spatial data type in mssql-server
 core.push('/sendpickrequest', function(req, res, next){
   console.log("Find nearest available benefactor for ", req.body);
@@ -143,14 +144,14 @@ core.push('/sendpickrequest', function(req, res, next){
       ret.sort(helpers.compareFunction);
 
 
-      
+
       res.send(JSON.stringify(ret));
 
 
     });
   });
 });
-
+*/
 
 core.get('/home',function(req, res, next){
   res.send("¯\\_(ツ)_/¯");
