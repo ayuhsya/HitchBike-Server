@@ -114,7 +114,6 @@ core.post('/toggleavailability', function(req, res, next){
               res.status(200).json({"Status":"Success"});
             };
           });
-
           newrequest.addParameter('id',TYPES.VarChar,req.body.id);
           newrequest.addParameter('latitude',TYPES.VarChar,null);
           newrequest.addParameter('longitude',TYPES.VarChar,null);
@@ -133,6 +132,10 @@ core.post('/toggleavailability', function(req, res, next){
         }
       };
     });
+
+    request.addParameter('id',TYPES.VarChar,req.body.id);
+    request.addParameter('availability',TYPES.VarChar,availability);
+    connection.execSql(request);
   });
 });
 
