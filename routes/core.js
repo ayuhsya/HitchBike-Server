@@ -119,7 +119,7 @@ core.post('/toggleavailability', function(req, res, next){
           newrequest.addParameter('longitude',TYPES.VarChar,null);
           connection.execSql(newrequest);
         } else {
-          var newrequest = new Request("DELETE FROM geolocation WHERE id = @id", function(err, rowCount){
+          var newrequest2 = new Request("DELETE FROM geolocation WHERE id = @id", function(err, rowCount){
             console.log("Delete from geolocation err", err);
             if (err){
               res.status(400).json({"Fail":"400"});
@@ -127,8 +127,8 @@ core.post('/toggleavailability', function(req, res, next){
               res.status(200).json({"Status":"Success"});
             };
           });
-          newrequest.addParameter('id',TYPES.VarChar,req.body.id);
-          connection.execSql(newrequest);
+          newrequest2.addParameter('id',TYPES.VarChar,req.body.id);
+          connection.execSql(newrequest2);
         }
       };
     });
