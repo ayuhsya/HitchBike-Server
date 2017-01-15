@@ -7,7 +7,7 @@ var Request = require('tedious').Request
 var TYPES = require('tedious').TYPES;
 var config = require('../config.json');
 var Promise = require('bluebird');
-var helpers = require('helpers');
+var helpers = require('../helpers');
 var core = express.Router();
 var fcm = new FCM(config.fcmServerKey);
 
