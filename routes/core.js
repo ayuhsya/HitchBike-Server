@@ -180,6 +180,8 @@ core.post('/sendpickrequest', function(req, res, next){
           'longitude': req.body.longitude
         };
 
+        console.log("Generated list", ret);
+
         for (let key in ret){
           let poolerpos = {
             'latitude': ret[key].latitude,
