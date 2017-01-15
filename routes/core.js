@@ -376,7 +376,7 @@ core.post('/acceptrequest', function(req, res, next){
   });
 });
 
-core.post('/verifyotp', function(res, req, next){
+core.post('/verifyotp', function(req, res, next){
   console.log("Verifying OTP for ", req.body);
   var ret = {};
   var connection = new Connection(config.sqlserver);
