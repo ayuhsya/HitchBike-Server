@@ -195,6 +195,7 @@ core.post('/sendpickrequest', function(req, res, next){
 
         // sorted list of users in ret, send push notification here
         for (let key in ret){
+          console.log("TIMESTAMP : ", timestamp);
           var message = {
             to: ret[key].token,
             data: {
