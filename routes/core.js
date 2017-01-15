@@ -224,6 +224,7 @@ core.post('/sendpickrequest', function(req, res, next){
               console.log("Created new request entry for ", req.body.id);
 
               var counter = 4;
+              var timer = 0;
               function makeRequest() {
                 var connection = new Connection(config.sqlserver);
                 var status = "";
@@ -248,6 +249,7 @@ core.post('/sendpickrequest', function(req, res, next){
                             } else {
                               console.log("OTP generated ", req.body.id);
                               res.status(200).json({"otp": otp});
+                              return stop;
                             };
                           });
 
@@ -283,140 +285,146 @@ core.post('/sendpickrequest', function(req, res, next){
                 makeRequest();
                 counter--;
                 if (counter > 0) {
-                    setTimeout(myFunction, 15000);
+                  timer = setTimeout(myFunction, 15000);
                 }
               };
-              myFunction();
-            };
-          });
+              timer = setTimeout(myFunction, 15000);
 
-          newrequest.addParameter('id',TYPES.VarChar,req.body.id);
-          newrequest.addParameter('status',TYPES.VarChar,'false');
-          newrequest.addParameter('timestamp', TYPES.VarChar, Date.now());
-          newrequest.addParameter('otp', TYPES.Int, null);
-          connection.execSql(newrequest);
+              function stop() {
+                if (timer) {
+                  clearTimeout(timer);
+                  timer = 0;
+                }
+              };
+            });
+
+            newrequest.addParameter('id',TYPES.VarChar,req.body.id);
+            newrequest.addParameter('status',TYPES.VarChar,'false');
+            newrequest.addParameter('timestamp', TYPES.VarChar, Date.now());
+            newrequest.addParameter('otp', TYPES.Int, null);
+            connection.execSql(newrequest);
+          });
+        };
+      });
+
+      request.on('row', function(columns){
+        var obj = {};
+        columns.forEach(function(column) {
+          if (column.value === null) {
+            console.log('NULL');
+          } else {
+            console.log("Value ",column);
+            obj[column.metadata.colName] = column.value;
+          };
         });
-      };
-    });
-
-    request.on('row', function(columns){
-      var obj = {};
-      columns.forEach(function(column) {
-        if (column.value === null) {
-          console.log('NULL');
-        } else {
-          console.log("Value ",column);
-          obj[column.metadata.colName] = column.value;
-        };
+        ret.push(obj);
       });
-      ret.push(obj);
+      connection.execSql(request);
     });
-    connection.execSql(request);
   });
-});
 
-core.post('/acceptrequest', function(req, res, next){
-  console.log("Accept request from ", req.body);
-  var ret = {};
-  var connection = new Connection(config.sqlserver);
-  connection.on('connect', function(err) {
-    // If no error, then good to proceed.
-    console.log("Connected", err);
-    let request = new Request("SELECT status from REQUESTS WHERE id=@id", function(err, rowCount){
-      if (err){
-        console.log(err);
-      } else {
-        if (ret['status'] == "true"){
-          console.log("Request already closed.");
-          res.status(400).json({"Status":"Request closed"});
+  core.post('/acceptrequest', function(req, res, next){
+    console.log("Accept request from ", req.body);
+    var ret = {};
+    var connection = new Connection(config.sqlserver);
+    connection.on('connect', function(err) {
+      // If no error, then good to proceed.
+      console.log("Connected", err);
+      let request = new Request("SELECT status from REQUESTS WHERE id=@id", function(err, rowCount){
+        if (err){
+          console.log(err);
         } else {
-          var connection = new Connection(config.sqlserver);
-          connection.on('connect', function(err) {
-            // If no error, then good to proceed.
-            console.log("Connected", err);
-            let request = new Request("UPDATE REQUESTS SET status = @status WHERE id = @id", function(err, rowCount){
-              if (err){
-                console.log(err);
-              } else {
-                console.log("Request accepted by", req.body.id);
-                res.status(200).json({"Status": "Success"});
-              };
+          if (ret['status'] == "true"){
+            console.log("Request already closed.");
+            res.status(400).json({"Status":"Request closed"});
+          } else {
+            var connection = new Connection(config.sqlserver);
+            connection.on('connect', function(err) {
+              // If no error, then good to proceed.
+              console.log("Connected", err);
+              let request = new Request("UPDATE REQUESTS SET status = @status WHERE id = @id", function(err, rowCount){
+                if (err){
+                  console.log(err);
+                } else {
+                  console.log("Request accepted by", req.body.id);
+                  res.status(200).json({"Status": "Success"});
+                };
+              });
+              request.addParameter('id',TYPES.VarChar,req.body.freeloaderid);
+              request.addParameter('status', TYPES.VarChar, "true");
+              connection.execSql(request);
             });
-            request.addParameter('id',TYPES.VarChar,req.body.freeloaderid);
-            request.addParameter('status', TYPES.VarChar, "true");
-            connection.execSql(request);
-          });
-        }
-      };
-    });
-
-    request.addParameter('id',TYPES.VarChar,req.body.id);
-    console.log(request);
-    request.on('row', function(columns){
-      columns.forEach(function(column) {
-        if (column.value === null) {
-          console.log('NULL');
-        } else {
-          console.log("Value ",column);
-          ret[column.metadata.colName] = column.value;
+          }
         };
       });
-    });
-    connection.execSql(request);
-  });
-});
 
-core.post('/verifyotp', function(res, req, next){
-  console.log("Verifying OTP for ", req.body);
-  var ret = {};
-  var connection = new Connection(config.sqlserver);
-  connection.on('connect', function(err) {
-    // If no error, then good to proceed.
-    console.log("Connected", err);
-    let request = new Request("SELECT otp FROM REQUESTS id = @id", function(err, rowCount){
-      if (err){
-        console.log(err);
-      } else {
-        if (ret['otp'] == req.body.otp){
-          var connection2 = new Connection(config.sqlserver);
-          connection2.on('connect', function(err) {
-            // If no error, then good to proceed.
-            console.log("Connected", err);
-            let request2 = new Request("DELETE FROM REQUESTS WHERE id = @id", function(err, rowCount){
-              if (err){
-                console.log(err);
-              } else {
-                console.log("OTP verified by", req.body.id);
-                res.status(200).json({"Status": "Success"});
-              };
+      request.addParameter('id',TYPES.VarChar,req.body.id);
+      console.log(request);
+      request.on('row', function(columns){
+        columns.forEach(function(column) {
+          if (column.value === null) {
+            console.log('NULL');
+          } else {
+            console.log("Value ",column);
+            ret[column.metadata.colName] = column.value;
+          };
+        });
+      });
+      connection.execSql(request);
+    });
+  });
+
+  core.post('/verifyotp', function(res, req, next){
+    console.log("Verifying OTP for ", req.body);
+    var ret = {};
+    var connection = new Connection(config.sqlserver);
+    connection.on('connect', function(err) {
+      // If no error, then good to proceed.
+      console.log("Connected", err);
+      let request = new Request("SELECT otp FROM REQUESTS id = @id", function(err, rowCount){
+        if (err){
+          console.log(err);
+        } else {
+          if (ret['otp'] == req.body.otp){
+            var connection2 = new Connection(config.sqlserver);
+            connection2.on('connect', function(err) {
+              // If no error, then good to proceed.
+              console.log("Connected", err);
+              let request2 = new Request("DELETE FROM REQUESTS WHERE id = @id", function(err, rowCount){
+                if (err){
+                  console.log(err);
+                } else {
+                  console.log("OTP verified by", req.body.id);
+                  res.status(200).json({"Status": "Success"});
+                };
+              });
+              request2.addParameter('id',TYPES.VarChar,req.body.freeloaderid);
+              connection.execSql(request2);
             });
-            request2.addParameter('id',TYPES.VarChar,req.body.freeloaderid);
-            connection.execSql(request2);
-          });
-        } else {
-          console.log("OTP not verified!");
-          res.status(400).json({"Status": "Fail"});
-        }
-      };
-    });
-    request.addParameter('id',TYPES.VarChar,req.body.freeloaderid);
-    request.on('row', function(columns){
-      var obj = {};
-      columns.forEach(function(column) {
-        if (column.value === null) {
-          console.log('NULL');
-        } else {
-          console.log("Value ",column);
-          ret[column.metadata.colName] = column.value;
+          } else {
+            console.log("OTP not verified!");
+            res.status(400).json({"Status": "Fail"});
+          }
         };
       });
+      request.addParameter('id',TYPES.VarChar,req.body.freeloaderid);
+      request.on('row', function(columns){
+        var obj = {};
+        columns.forEach(function(column) {
+          if (column.value === null) {
+            console.log('NULL');
+          } else {
+            console.log("Value ",column);
+            ret[column.metadata.colName] = column.value;
+          };
+        });
+      });
+      connection.execSql(request);
     });
-    connection.execSql(request);
   });
-});
 
-core.get('/home',function(req, res, next){
-  res.send("¯\\_(ツ)_/¯");
-});
+  core.get('/home',function(req, res, next){
+    res.send("¯\\_(ツ)_/¯");
+  });
 
-module.exports = core;
+  module.exports = core;
