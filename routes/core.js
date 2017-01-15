@@ -221,7 +221,7 @@ core.post('/sendpickrequest', function(req, res, next){
             } else {
               console.log("Created new request entry for ", req.body.id);
               var counter = 4;
-              function makeRequst() {
+              function makeRequest() {
                 var connection = new Connection(config.sqlserver);
                 connection.on('connect', function(err) {
                   // If no error, then good to proceed.
