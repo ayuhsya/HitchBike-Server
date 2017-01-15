@@ -198,7 +198,7 @@ core.post('/sendpickrequest', function(req, res, next){
           var message = {
             to: ret[key].token,
             data: {
-              "trip": timestamp
+              "tripid": timestamp
             },
             notification: {
               title: 'New trip request!',
@@ -396,7 +396,7 @@ core.post('/verifyotp', function(res, req, next){
         }
       };
     });
-    request.addParameter('tripid',TYPES.VarChar,req.body.trip);
+    request.addParameter('tripid',TYPES.VarChar,req.body.tripid);
     request.on('row', function(columns){
       var obj = {};
       columns.forEach(function(column) {
