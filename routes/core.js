@@ -215,7 +215,7 @@ core.post('/sendpickrequest', function(req, res, next){
         connection.on('connect', function(err) {
           // If no error, then good to proceed.
           console.log("Connected", err);
-          let newrequest = new Request("INSERT into REQUESTS VALUES(@id,@status,@timestamp)", function(err, rowCount){
+          let newrequest = new Request("INSERT into REQUESTS VALUES(@id,@status,@timestamp,@otp)", function(err, rowCount){
             if (err){
               console.log(err);
             } else {
@@ -273,6 +273,7 @@ core.post('/sendpickrequest', function(req, res, next){
           newrequest.addParameter('id',TYPES.VarChar,req.body.id);
           newrequest.addParameter('status',TYPES.VarChar,'False');
           newrequest.addParameter('timestamp', TYPES.VarChar, Date.now());
+          newrequest.addParameter('otp', TYPES.Int, null);
           connection.execSql(newrequest);
         });
       };
