@@ -228,7 +228,6 @@ core.post('/sendpickrequest', function(req, res, next){
               var counter = 4;
               var timer = 0;
               var otp = Math.floor((Math.random() * 10000) + 1);
-              console.log("GENERATED OTP IS: ", otp);
               function makeRequest() {
                 var connection = new Connection(config.sqlserver);
                 var status = "";
