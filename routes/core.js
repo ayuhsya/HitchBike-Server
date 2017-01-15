@@ -164,6 +164,7 @@ core.post('/updateposition', function(req, res, next){
 core.post('/sendpickrequest', function(req, res, next){
   console.log("Find nearest available pooler for ", req.body);
   var ret = [];
+  var timestamp = Date.now();
 
   var connection = new Connection(config.sqlserver);
   connection.on('connect', function(err) {
@@ -197,7 +198,7 @@ core.post('/sendpickrequest', function(req, res, next){
           var message = {
             to: ret[key].token,
             data: {
-              "freeloaderid": req.body.id
+              "trip": timestamp
             },
             notification: {
               title: 'New trip request!',
@@ -217,7 +218,7 @@ core.post('/sendpickrequest', function(req, res, next){
         connection.on('connect', function(err) {
           // If no error, then good to proceed.
           console.log("Connected", err);
-          let newrequest = new Request("INSERT into REQUESTS VALUES(@id,@status,@timestamp,@otp)", function(err, rowCount){
+          let newrequest = new Request("INSERT into REQUESTS VALUES(@id,@driverid,@status,@tripid,@otp)", function(err, rowCount){
             if (err){
               console.log(err);
             } else {
@@ -231,7 +232,7 @@ core.post('/sendpickrequest', function(req, res, next){
                 connection.on('connect', function(err) {
                   // If no error, then good to proceed.
                   console.log("Connected", err);
-                  let _newrequest = new Request("SELECT status from REQUESTS WHERE id=@id", function(err, rowCount){
+                  let _newrequest = new Request("SELECT status from REQUESTS WHERE tripid=@tripid", function(err, rowCount){
                     if (err){
                       console.log(err);
                     } else {
@@ -243,7 +244,7 @@ core.post('/sendpickrequest', function(req, res, next){
                         connection.on('connect', function(err) {
                           // If no error, then good to proceed.
                           console.log("Connected", err);
-                          let _request = new Request("UPDATE REQUESTS SET otp = @otp WHERE id = @id", function(err, rowCount){
+                          let _request = new Request("UPDATE REQUESTS SET otp = @otp WHERE tripid = @tripid", function(err, rowCount){
                             if (err){
                               console.log(err);
                             } else {
@@ -253,7 +254,7 @@ core.post('/sendpickrequest', function(req, res, next){
                             };
                           });
 
-                          _request.addParameter('id',TYPES.VarChar,req.body.id);
+                          _request.addParameter('tripid',TYPES.VarChar,timestamp);
                           _request.addParameter('otp',TYPES.Int,otp);
 
 
@@ -264,7 +265,7 @@ core.post('/sendpickrequest', function(req, res, next){
                       }
                     };
                   });
-                  _newrequest.addParameter('id',TYPES.VarChar,req.body.id);
+                  _newrequest.addParameter('tripid',TYPES.VarChar,timestamp);
                   _newrequest.on('row', function(columns){
                     var obj = {};
                     columns.forEach(function(column) {
@@ -276,11 +277,9 @@ core.post('/sendpickrequest', function(req, res, next){
                       };
                     });
                   });
-
                   connection.execSql(_newrequest);
                 });
               };
-
               function myFunction() {
                 makeRequest();
                 counter--;
@@ -288,7 +287,6 @@ core.post('/sendpickrequest', function(req, res, next){
                   timer = setTimeout(myFunction, 15000);
                 }
               };
-              myFunction();
 
               function stop() {
                 if (timer) {
@@ -296,136 +294,126 @@ core.post('/sendpickrequest', function(req, res, next){
                   timer = 0;
                 }
               };
+              myFunction();
             }
           });
 
-            newrequest.addParameter('id',TYPES.VarChar,req.body.id);
-            newrequest.addParameter('status',TYPES.VarChar,'false');
-            newrequest.addParameter('timestamp', TYPES.VarChar, Date.now());
-            newrequest.addParameter('otp', TYPES.Int, null);
-            connection.execSql(newrequest);
+          newrequest.addParameter('id',TYPES.VarChar,req.body.id);
+          newrequest.addParameter('driverid',TYPES.VarChar,null)
+          newrequest.addParameter('status',TYPES.VarChar,'false');
+          newrequest.addParameter('tripid', TYPES.VarChar, timestamp);
+          newrequest.addParameter('otp', TYPES.Int, null);
+          connection.execSql(newrequest);
+        });
+      };
+    });
+
+    request.on('row', function(columns){
+      var obj = {};
+      columns.forEach(function(column) {
+        if (column.value === null) {
+          console.log('NULL');
+        } else {
+          console.log("Value ",column);
+          obj[column.metadata.colName] = column.value;
+        };
+      });
+      ret.push(obj);
+    });
+    connection.execSql(request);
+  });
+});
+
+core.post('/acceptrequest', function(req, res, next){
+  console.log("Accept request from ", req.body);
+  var ret = {};
+  var connection = new Connection(config.sqlserver);
+  connection.on('connect', function(err) {
+    // If no error, then good to proceed.
+    console.log("Connected", err);
+    let request = new Request("SELECT status from REQUESTS WHERE tripid=@tripid", function(err, rowCount){
+      if (err){
+        console.log(err);
+      } else {
+        if (ret['status'] == "true"){
+          console.log("Request already closed.");
+          res.status(400).json({"Status":"Request closed"});
+        } else {
+          var connection = new Connection(config.sqlserver);
+          connection.on('connect', function(err) {
+            // If no error, then good to proceed.
+            console.log("Connected", err);
+            let request = new Request("UPDATE REQUESTS SET status=@status, driverid=@driverid WHERE tripid=@tripid", function(err, rowCount){
+              if (err){
+                console.log(err);
+              } else {
+                console.log("Request accepted by", req.body.id);
+                res.status(200).json({"Status": "Success"});
+              };
+            });
+            request.addParameter('tripid',TYPES.VarChar,req.body.tripid);
+            request.addParameter('status', TYPES.VarChar, "true");
+            request.addParameter('driverid',TYPES.VarChar,req.body.id);
+            connection.execSql(request);
           });
-        };
-      });
-
-      request.on('row', function(columns){
-        var obj = {};
-        columns.forEach(function(column) {
-          if (column.value === null) {
-            console.log('NULL');
-          } else {
-            console.log("Value ",column);
-            obj[column.metadata.colName] = column.value;
-          };
-        });
-        ret.push(obj);
-      });
-      connection.execSql(request);
+        }
+      };
     });
-  });
 
-  core.post('/acceptrequest', function(req, res, next){
-    console.log("Accept request from ", req.body);
-    var ret = {};
-    var connection = new Connection(config.sqlserver);
-    connection.on('connect', function(err) {
-      // If no error, then good to proceed.
-      console.log("Connected", err);
-      let request = new Request("SELECT status from REQUESTS WHERE id=@id", function(err, rowCount){
-        if (err){
-          console.log(err);
+    request.addParameter('tripid',TYPES.VarChar,req.body.tripid);
+    console.log(request);
+    request.on('row', function(columns){
+      columns.forEach(function(column) {
+        if (column.value === null) {
+          console.log('NULL');
         } else {
-          if (ret['status'] == "true"){
-            console.log("Request already closed.");
-            res.status(400).json({"Status":"Request closed"});
-          } else {
-            var connection = new Connection(config.sqlserver);
-            connection.on('connect', function(err) {
-              // If no error, then good to proceed.
-              console.log("Connected", err);
-              let request = new Request("UPDATE REQUESTS SET status = @status WHERE id = @id", function(err, rowCount){
-                if (err){
-                  console.log(err);
-                } else {
-                  console.log("Request accepted by", req.body.id);
-                  res.status(200).json({"Status": "Success"});
-                };
-              });
-              request.addParameter('id',TYPES.VarChar,req.body.freeloaderid);
-              request.addParameter('status', TYPES.VarChar, "true");
-              connection.execSql(request);
-            });
-          }
+          console.log("Value ",column);
+          ret[column.metadata.colName] = column.value;
         };
       });
-
-      request.addParameter('id',TYPES.VarChar,req.body.id);
-      console.log(request);
-      request.on('row', function(columns){
-        columns.forEach(function(column) {
-          if (column.value === null) {
-            console.log('NULL');
-          } else {
-            console.log("Value ",column);
-            ret[column.metadata.colName] = column.value;
-          };
-        });
-      });
-      connection.execSql(request);
     });
+    connection.execSql(request);
   });
+});
 
-  core.post('/verifyotp', function(res, req, next){
-    console.log("Verifying OTP for ", req.body);
-    var ret = {};
-    var connection = new Connection(config.sqlserver);
-    connection.on('connect', function(err) {
-      // If no error, then good to proceed.
-      console.log("Connected", err);
-      let request = new Request("SELECT otp FROM REQUESTS id = @id", function(err, rowCount){
-        if (err){
-          console.log(err);
+core.post('/verifyotp', function(res, req, next){
+  console.log("Verifying OTP for ", req.body);
+  var ret = {};
+  var connection = new Connection(config.sqlserver);
+  connection.on('connect', function(err) {
+    // If no error, then good to proceed.
+    console.log("Connected", err);
+    let request = new Request("SELECT otp FROM REQUESTS WHERE tripid = @tripid", function(err, rowCount){
+      if (err){
+        console.log(err);
+      } else {
+        if (ret['otp'] == req.body.otp){
+          console.log("OTP verified!");
+          res.status(200).json({"otp":"okay"});
         } else {
-          if (ret['otp'] == req.body.otp){
-            var connection2 = new Connection(config.sqlserver);
-            connection2.on('connect', function(err) {
-              // If no error, then good to proceed.
-              console.log("Connected", err);
-              let request2 = new Request("DELETE FROM REQUESTS WHERE id = @id", function(err, rowCount){
-                if (err){
-                  console.log(err);
-                } else {
-                  console.log("OTP verified by", req.body.id);
-                  res.status(200).json({"Status": "Success"});
-                };
-              });
-              request2.addParameter('id',TYPES.VarChar,req.body.freeloaderid);
-              connection.execSql(request2);
-            });
-          } else {
-            console.log("OTP not verified!");
-            res.status(400).json({"Status": "Fail"});
-          }
+          console.log("OTP not verified!");
+          res.status(400).json({"Status": "Fail"});
+        }
+      };
+    });
+    request.addParameter('tripid',TYPES.VarChar,req.body.trip);
+    request.on('row', function(columns){
+      var obj = {};
+      columns.forEach(function(column) {
+        if (column.value === null) {
+          console.log('NULL');
+        } else {
+          console.log("Value ",column);
+          ret[column.metadata.colName] = column.value;
         };
       });
-      request.addParameter('id',TYPES.VarChar,req.body.freeloaderid);
-      request.on('row', function(columns){
-        var obj = {};
-        columns.forEach(function(column) {
-          if (column.value === null) {
-            console.log('NULL');
-          } else {
-            console.log("Value ",column);
-            ret[column.metadata.colName] = column.value;
-          };
-        });
-      });
-      connection.execSql(request);
     });
+    connection.execSql(request);
   });
+});
 
-  core.get('/home',function(req, res, next){
-    res.send("¯\\_(ツ)_/¯");
-  });
+core.get('/home',function(req, res, next){
+  res.send("¯\\_(ツ)_/¯");
+});
 
-  module.exports = core;
+module.exports = core;
