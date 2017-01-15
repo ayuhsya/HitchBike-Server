@@ -296,7 +296,8 @@ core.post('/sendpickrequest', function(req, res, next){
                   timer = 0;
                 }
               };
-            });
+            }
+          });
 
             newrequest.addParameter('id',TYPES.VarChar,req.body.id);
             newrequest.addParameter('status',TYPES.VarChar,'false');
