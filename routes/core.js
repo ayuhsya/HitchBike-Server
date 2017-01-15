@@ -264,13 +264,13 @@ core.post('/sendpickrequest', function(req, res, next){
                     };
                   });
                   _newrequest.addParameter('id',TYPES.VarChar,req.body.id);
-                  request.on('row', function(columns){
+                  _newrequest.on('row', function(columns){
                     var obj = {};
                     columns.forEach(function(column) {
                       if (column.value === null) {
                         console.log('NULL');
                       } else {
-                        console.log("Value ",column);
+                        console.log("Value of STATUS: ",column);
                         status = column.value;
                       };
                     });
