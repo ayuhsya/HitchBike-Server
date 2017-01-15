@@ -195,7 +195,7 @@ core.post('/sendpickrequest', function(req, res, next){
           var message = {
             to: ret[key].token,
             data: {
-              "freeloader": req.body.id
+              "freeloaderid": req.body.id
             },
             notification: {
               title: 'New trip request!',
