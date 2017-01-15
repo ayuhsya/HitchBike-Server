@@ -237,6 +237,7 @@ core.post('/sendpickrequest', function(req, res, next){
                     } else {
                       if(status == "true"){
                         var OTP = Math.floor((Math.random() * 10000) + 1);
+                        console.log("GENERATED OTP IS: ", OTP);
 
                         var connection = new Connection(config.sqlserver);
                         connection.on('connect', function(err) {
@@ -292,7 +293,7 @@ core.post('/sendpickrequest', function(req, res, next){
           });
 
           newrequest.addParameter('id',TYPES.VarChar,req.body.id);
-          newrequest.addParameter('status',TYPES.VarChar,'False');
+          newrequest.addParameter('status',TYPES.VarChar,'false');
           newrequest.addParameter('timestamp', TYPES.VarChar, Date.now());
           newrequest.addParameter('otp', TYPES.Int, null);
           connection.execSql(newrequest);
@@ -327,7 +328,7 @@ core.post('/acceptrequest', function(req, res, next){
       if (err){
         console.log(err);
       } else {
-        if (ret['status'] == "True"){
+        if (ret['status'] == "true"){
           console.log("Request already closed.");
           res.status(400).json({"Status":"Request closed"});
         } else {
@@ -344,7 +345,7 @@ core.post('/acceptrequest', function(req, res, next){
               };
             });
             request.addParameter('id',TYPES.VarChar,req.body.freeloaderid);
-            request.addParameter('status', TYPES.VarChar, "True");
+            request.addParameter('status', TYPES.VarChar, "true");
             connection.execSql(request);
           });
         }
