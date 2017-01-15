@@ -176,16 +176,16 @@ core.post('/sendpickrequest', function(req, res, next){
         console.log("Found " + rowCount + " available users.");
 
         var freeloaderpos = {
-          'latitude': req.body.latitude,
-          'longitude': req.body.longitude
+          latitude: parseFloat(req.body.latitude),
+          longitude: parseFloat(req.body.longitude)
         };
 
         console.log("Generated list", ret);
 
         for (let key in ret){
           let poolerpos = {
-            'latitude': ret[key].latitude,
-            'longitude': ret[key].longitude
+            latitude: parseFloat(ret[key].latitude),
+            longitude: parseFloat(ret[key].longitude)
           }
           ret[key].geoDistance = geolib.getDistance(freeloaderpos, poolerpos);
         };
