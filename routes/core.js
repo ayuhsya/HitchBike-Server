@@ -220,6 +220,8 @@ core.post('/sendpickrequest', function(req, res, next){
               console.log(err);
             } else {
               console.log("Created new request entry for ", req.body.id);
+
+
               var counter = 4;
               function makeRequest() {
                 var connection = new Connection(config.sqlserver);
@@ -267,6 +269,8 @@ core.post('/sendpickrequest', function(req, res, next){
                     setTimeout(myFunction, 15000);
                 }
               }
+
+              myFunction();
             };
           });
 
