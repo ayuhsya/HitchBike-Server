@@ -288,7 +288,7 @@ core.post('/sendpickrequest', function(req, res, next){
                   timer = setTimeout(myFunction, 15000);
                 }
               };
-              timer = setTimeout(myFunction, 15000);
+              myFunction();
 
               function stop() {
                 if (timer) {
