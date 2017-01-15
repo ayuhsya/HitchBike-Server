@@ -225,6 +225,7 @@ core.post('/sendpickrequest', function(req, res, next){
               var counter = 4;
               function makeRequest() {
                 var connection = new Connection(config.sqlserver);
+                var status = "";
                 connection.on('connect', function(err) {
                   // If no error, then good to proceed.
                   console.log("Connected", err);
@@ -250,6 +251,8 @@ core.post('/sendpickrequest', function(req, res, next){
 
                           _request.addParameter('id',TYPES.VarChar,req.body.id);
                           _request.addParameter('otp',TYPES.Int,OTP);
+
+
                           connection.execSql(_request);
                         });
                       } else {
@@ -258,6 +261,18 @@ core.post('/sendpickrequest', function(req, res, next){
                     };
                   });
                   _newrequest.addParameter('id',TYPES.VarChar,req.body.id);
+                  request.on('row', function(columns){
+                    var obj = {};
+                    columns.forEach(function(column) {
+                      if (column.value === null) {
+                        console.log('NULL');
+                      } else {
+                        console.log("Value ",column);
+                        status = column.value;
+                      };
+                    });
+                  });
+
                   connection.execSql(_newrequest);
                 });
               };
