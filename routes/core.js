@@ -227,6 +227,8 @@ core.post('/sendpickrequest', function(req, res, next){
 
               var counter = 4;
               var timer = 0;
+              var otp = Math.floor((Math.random() * 10000) + 1);
+              console.log("GENERATED OTP IS: ", otp);
               function makeRequest() {
                 var connection = new Connection(config.sqlserver);
                 var status = "";
@@ -238,8 +240,6 @@ core.post('/sendpickrequest', function(req, res, next){
                       console.log(err);
                     } else {
                       if(status == "true"){
-                        var otp = Math.floor((Math.random() * 10000) + 1);
-                        console.log("GENERATED OTP IS: ", otp);
 
                         var connection = new Connection(config.sqlserver);
                         connection.on('connect', function(err) {
@@ -251,7 +251,7 @@ core.post('/sendpickrequest', function(req, res, next){
                             } else {
                               console.log("OTP generated ", req.body.id);
                               res.status(200).json({"otp": otp});
-                              return stop;
+                              return stop();
                             };
                           });
 
