@@ -312,7 +312,7 @@ core.post('/sendpickrequest', function(req, res, next){
       var obj = {};
       columns.forEach(function(column) {
         if (column.value === null) {
-          console.log('NULL');
+          console.log('NULL',column);
         } else {
           console.log("Value ",column);
           obj[column.metadata.colName] = column.value;
